@@ -1,0 +1,244 @@
+# depslib dependency file v1.0
+1504289654 source:/home/10049190/git/progswb2/trab/t2-181-jdf6i4hygbhf/seamcarving/lib/SOIL/image_DXT.c
+	"image_DXT.h"
+	<math.h>
+	<stdlib.h>
+	<string.h>
+	<stdio.h>
+
+1504289654 /home/10049190/git/progswb2/trab/t2-181-jdf6i4hygbhf/seamcarving/lib/SOIL/image_DXT.h
+
+1504289654 source:/home/10049190/git/progswb2/trab/t2-181-jdf6i4hygbhf/seamcarving/lib/SOIL/image_helper.c
+	"image_helper.h"
+	<stdlib.h>
+	<math.h>
+
+1504289654 /home/10049190/git/progswb2/trab/t2-181-jdf6i4hygbhf/seamcarving/lib/SOIL/image_helper.h
+
+1504289654 source:/home/10049190/git/progswb2/trab/t2-181-jdf6i4hygbhf/seamcarving/lib/SOIL/SOIL.c
+	<windows.h>
+	<wingdi.h>
+	<GL/gl.h>
+	<OpenGL/gl.h>
+	<Carbon/Carbon.h>
+	<GL/gl.h>
+	<GL/glx.h>
+	"SOIL.h"
+	"stb_image_aug.h"
+	"image_helper.h"
+	"image_DXT.h"
+	<stdlib.h>
+	<string.h>
+
+1504289654 /home/10049190/git/progswb2/trab/t2-181-jdf6i4hygbhf/seamcarving/lib/SOIL/SOIL.h
+
+1504289654 /home/10049190/git/progswb2/trab/t2-181-jdf6i4hygbhf/seamcarving/lib/SOIL/stb_image_aug.h
+	<stdio.h>
+
+1504289654 source:/home/10049190/git/progswb2/trab/t2-181-jdf6i4hygbhf/seamcarving/lib/SOIL/stb_image_aug.c
+	"stb_image_aug.h"
+	<math.h>
+	<string.h>
+	<stdio.h>
+	<stdlib.h>
+	<memory.h>
+	<assert.h>
+	<stdarg.h>
+	"stbi_DDS_aug.h"
+	"stbi_DDS_aug_c.h"
+
+1504289654 /home/10049190/git/progswb2/trab/t2-181-jdf6i4hygbhf/seamcarving/lib/SOIL/stbi_DDS_aug.h
+
+1504289654 /home/10049190/git/progswb2/trab/t2-181-jdf6i4hygbhf/seamcarving/lib/SOIL/stbi_DDS_aug_c.h
+
+1527538539 source:/home/10049190/git/progswb2/trab/t2-181-jdf6i4hygbhf/seamcarving/main.c
+	<stdio.h>
+	<stdlib.h>
+	<string.h>
+	<windows.h>
+	<OpenGL/gl.h>
+	<OpenGL/glu.h>
+	<GLUT/glut.h>
+	<GL/gl.h>
+	<GL/glu.h>
+	<GL/glut.h>
+	"SOIL.h"
+
+1504289654 /home/10049190/git/progswb2/trab/t2-181-jdf6i4hygbhf/seamcarving/include/GL/glut.h
+	"freeglut.h"
+
+1504289654 /home/10049190/git/progswb2/trab/t2-181-jdf6i4hygbhf/seamcarving/include/GL/freeglut.h
+	"freeglut_std.h"
+	"freeglut_ext.h"
+
+1504289654 /home/10049190/git/progswb2/trab/t2-181-jdf6i4hygbhf/seamcarving/include/GL/freeglut_std.h
+	<windows.h>
+	<GL/gl.h>
+	<GL/glu.h>
+
+1504289654 /home/10049190/git/progswb2/trab/t2-181-jdf6i4hygbhf/seamcarving/include/GL/freeglut_ext.h
+
+1504289654 /home/10049190/git/progswb2/trab/t2-181-jdf6i4hygbhf/seamcarving/SOIL.h
+
+1504289654 source:/home/10049190/Downloads/seamcarving/lib/SOIL/image_DXT.c
+	"image_DXT.h"
+	<math.h>
+	<stdlib.h>
+	<string.h>
+	<stdio.h>
+
+1504289654 /home/10049190/Downloads/seamcarving/lib/SOIL/image_DXT.h
+
+1504289654 source:/home/10049190/Downloads/seamcarving/lib/SOIL/image_helper.c
+	"image_helper.h"
+	<stdlib.h>
+	<math.h>
+
+1504289654 /home/10049190/Downloads/seamcarving/lib/SOIL/image_helper.h
+
+1504289654 source:/home/10049190/Downloads/seamcarving/lib/SOIL/SOIL.c
+	<windows.h>
+	<wingdi.h>
+	<GL/gl.h>
+	<OpenGL/gl.h>
+	<Carbon/Carbon.h>
+	<GL/gl.h>
+	<GL/glx.h>
+	"SOIL.h"
+	"stb_image_aug.h"
+	"image_helper.h"
+	"image_DXT.h"
+	<stdlib.h>
+	<string.h>
+
+1504289654 /home/10049190/Downloads/seamcarving/lib/SOIL/SOIL.h
+
+1504289654 /home/10049190/Downloads/seamcarving/lib/SOIL/stb_image_aug.h
+	<stdio.h>
+
+1504289654 source:/home/10049190/Downloads/seamcarving/lib/SOIL/stb_image_aug.c
+	"stb_image_aug.h"
+	<math.h>
+	<string.h>
+	<stdio.h>
+	<stdlib.h>
+	<memory.h>
+	<assert.h>
+	<stdarg.h>
+	"stbi_DDS_aug.h"
+	"stbi_DDS_aug_c.h"
+
+1504289654 /home/10049190/Downloads/seamcarving/lib/SOIL/stbi_DDS_aug.h
+
+1504289654 /home/10049190/Downloads/seamcarving/lib/SOIL/stbi_DDS_aug_c.h
+
+1527538765 source:/home/10049190/Downloads/seamcarving/main.c
+	<stdio.h>
+	<stdlib.h>
+	<string.h>
+	<windows.h>
+	<OpenGL/gl.h>
+	<OpenGL/glu.h>
+	<GLUT/glut.h>
+	<GL/gl.h>
+	<GL/glu.h>
+	<GL/glut.h>
+	"SOIL.h"
+
+1504289654 /home/10049190/Downloads/seamcarving/include/GL/glut.h
+	"freeglut.h"
+
+1504289654 /home/10049190/Downloads/seamcarving/include/GL/freeglut.h
+	"freeglut_std.h"
+	"freeglut_ext.h"
+
+1504289654 /home/10049190/Downloads/seamcarving/include/GL/freeglut_std.h
+	<windows.h>
+	<GL/gl.h>
+	<GL/glu.h>
+
+1504289654 /home/10049190/Downloads/seamcarving/include/GL/freeglut_ext.h
+
+1504289654 /home/10049190/Downloads/seamcarving/SOIL.h
+
+1504289654 source:c:\documents and settings\10049190\desktop\seamcarving\lib\soil\image_dxt.c
+	"image_DXT.h"
+	<math.h>
+	<stdlib.h>
+	<string.h>
+	<stdio.h>
+
+1504289654 c:\documents and settings\10049190\desktop\seamcarving\lib\soil\image_dxt.h
+
+1504289654 source:c:\documents and settings\10049190\desktop\seamcarving\lib\soil\image_helper.c
+	"image_helper.h"
+	<stdlib.h>
+	<math.h>
+
+1504289654 c:\documents and settings\10049190\desktop\seamcarving\lib\soil\image_helper.h
+
+1504289654 source:c:\documents and settings\10049190\desktop\seamcarving\lib\soil\soil.c
+	<windows.h>
+	<wingdi.h>
+	<GL/gl.h>
+	<OpenGL/gl.h>
+	<Carbon/Carbon.h>
+	<GL/gl.h>
+	<GL/glx.h>
+	"SOIL.h"
+	"stb_image_aug.h"
+	"image_helper.h"
+	"image_DXT.h"
+	<stdlib.h>
+	<string.h>
+
+1504289654 c:\documents and settings\10049190\desktop\seamcarving\lib\soil\soil.h
+
+1504289654 c:\documents and settings\10049190\desktop\seamcarving\lib\soil\stb_image_aug.h
+	<stdio.h>
+
+1504289654 source:c:\documents and settings\10049190\desktop\seamcarving\lib\soil\stb_image_aug.c
+	"stb_image_aug.h"
+	<math.h>
+	<string.h>
+	<stdio.h>
+	<stdlib.h>
+	<memory.h>
+	<assert.h>
+	<stdarg.h>
+	"stbi_DDS_aug.h"
+	"stbi_DDS_aug_c.h"
+
+1504289654 c:\documents and settings\10049190\desktop\seamcarving\lib\soil\stbi_dds_aug.h
+
+1504289654 c:\documents and settings\10049190\desktop\seamcarving\lib\soil\stbi_dds_aug_c.h
+
+1527895353 source:c:\documents and settings\10049190\desktop\seamcarving\main.c
+	<stdio.h>
+	<stdlib.h>
+	<string.h>
+	<windows.h>
+	<OpenGL/gl.h>
+	<OpenGL/glu.h>
+	<GLUT/glut.h>
+	<GL/gl.h>
+	<GL/glu.h>
+	<GL/glut.h>
+	"SOIL.h"
+
+1426360528 c:\documents and settings\10049190\desktop\seamcarving\include\gl\glut.h
+	"freeglut_std.h"
+
+1426360528 c:\documents and settings\10049190\desktop\seamcarving\include\gl\freeglut_std.h
+	<windows.h>
+	<EGL/egl.h>
+	<GLES/gl.h>
+	<GLES2/gl2.h>
+	<OpenGL/gl.h>
+	<OpenGL/glu.h>
+	<GL/gl.h>
+	<GL/glu.h>
+	<stdlib.h>
+
+1504289654 c:\documents and settings\10049190\desktop\seamcarving\soil.h
+
