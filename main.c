@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>		// Para usar strings
+#include <limits.h>
 
 #ifdef WIN32
 #include <windows.h>    // Apenas para Windows
@@ -30,6 +31,12 @@ typedef struct {
     RGB* img;
 } Img;
 
+// Energia acumulada, contem referência para o pixel anterior que faz parte da soma
+typedef struct {
+    long energy;
+    int edgeTo;
+} AccEnergyPixel;
+
 // Protótipos
 void load(char* name, Img* pic);
 void uploadTexture();
@@ -38,6 +45,13 @@ void uploadTexture();
 void init();
 void draw();
 void keyboard(unsigned char key, int x, int y);
+
+// Energy
+void computeEnergy(Img img, Img mask, long* e);
+void computeSeam(Img img, long* energy, int* seam);
+void removeSeam(Img* img, int* seam);
+void imageCopy(Img in, Img *out);
+void crop(Img* img, Img mask, int pixels);
 
 // Largura e altura da janela
 int width, height;
@@ -151,13 +165,18 @@ void keyboard(unsigned char key, int x, int y)
         // 1-3: seleciona a imagem correspondente (origem, máscara e resultado)
         sel = key - '1';
     if(key == 's') {
+        imageCopy(pic[0], &pic[2]);
+        crop(&pic[2], pic[1], 50);
+        printf("Dimensões: %d x %d\n", pic[2].width, pic[2].height);
+        sel = 2;
+
         // Aplica o algoritmo e gera a saida em pic[2].img...
         // ...
         // ... (crie uma função para isso!)
 
         // Exemplo: pintando tudo de amarelo
-        for(int i=0; i<pic[2].height*pic[2].width; i++)
-            pic[2].img[i].r = pic[2].img[i].g = 255;
+        //for(int i=0; i<pic[2].height*pic[2].width; i++)
+        //    pic[2].img[i].r = pic[2].img[i].g = 255;
 
         // Chame uploadTexture a cada vez que mudar
         // a imagem (pic[2])
@@ -170,6 +189,7 @@ void keyboard(unsigned char key, int x, int y)
 // de forma a exibi-la na tela
 void uploadTexture()
 {
+    //tex[2] = SOIL_create_OGL_texture((unsigned char*) pic[2].img, pic[2].width, pic[2].height, SOIL_LOAD_RGB, SOIL_CREATE_NEW_ID, 0);
     glEnable(GL_TEXTURE_2D);
     glBindTexture(GL_TEXTURE_2D, tex[2]);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB,
@@ -211,4 +231,170 @@ void draw()
 
     // Exibe a imagem
     glutSwapBuffers();
+}
+
+void computeEnergy(Img img, Img mask, long* e)
+{
+    int x, y, xr, xg, xb, yr, yg, yb;
+
+    for(int i = 0; i < img.height * img.width; i++) {
+        int m = mask.img[i].r - mask.img[i].g;
+        if(m > 200) {
+            e[i] = -999999999;
+        } else if(m < -200) {
+            e[i] = 999999999;
+        } else {
+            x = i % img.width;
+            y = i / img.width;
+
+            if(x == 0) {
+                xr = img.img[i+1].r - img.img[i+img.width-1].r;
+                xg = img.img[i+1].g - img.img[i+img.width-1].g;
+                xb = img.img[i+1].b - img.img[i+img.width-1].b;
+            } else if(x == img.width-1) {
+                xr = img.img[i-img.width+1].r - img.img[i-1].r;
+                xg = img.img[i-img.width+1].g - img.img[i-1].g;
+                xb = img.img[i-img.width+1].b - img.img[i-1].b;
+            } else {
+                xr = img.img[i+1].r - img.img[i-1].r;
+                xg = img.img[i+1].g - img.img[i-1].g;
+                xb = img.img[i+1].b - img.img[i-1].b;
+            }
+
+            if(y == 0) {
+                yr = img.img[i+img.width].r - img.img[x+img.width*(img.height-1)].r;
+                yg = img.img[i+img.width].g - img.img[x+img.width*(img.height-1)].g;
+                yb = img.img[i+img.width].b - img.img[x+img.width*(img.height-1)].b;
+            } else if(y == img.height-1) {
+                yr = img.img[x].r - img.img[i-img.width].r;
+                yg = img.img[x].g - img.img[i-img.width].g;
+                yb = img.img[x].b - img.img[i-img.width].b;
+            } else {
+                yr = img.img[i+img.width].r - img.img[i-img.width].r;
+                yg = img.img[i+img.width].g - img.img[i-img.width].g;
+                yb = img.img[i+img.width].b - img.img[i-img.width].b;
+            }
+
+            //printf("%d\n", xr*xr + xg*xg* + xb*xb + yr*yr + yg*yg + yb*yb);
+            e[i] = xr*xr + xg*xg + xb*xb + yr*yr + yg*yg + yb*yb;
+        }
+        //printf("%p = %d: %d\n", &e[i], i, e[i]);
+    }
+}
+
+void computeSeam(Img img, long* energy, int* seam)
+{
+    AccEnergyPixel accEnergy[img.width * img.height];
+    for(int i = 0; i < img.width; i++) {
+        accEnergy[i].energy = energy[i];
+        accEnergy[i].edgeTo = -1;
+    }
+
+    for(int i = img.width; i < img.height*img.width; i++) {
+        int x = i % img.width;
+
+        int idx = i-img.width;
+        long e = accEnergy[idx].energy;
+        if(x == 0) {
+            int ii = idx+1;
+            if(accEnergy[ii].energy < e) {
+                idx = ii;
+                e = accEnergy[idx].energy;
+            }
+        } else if(x == img.width-1) {
+            int ii = idx-1;
+            if(accEnergy[ii].energy < e) {
+                idx = ii;
+                e = accEnergy[idx].energy;
+            }
+        } else {
+            int ii = idx+1;
+            if(accEnergy[ii].energy < e) {
+                idx = ii;
+                e = accEnergy[idx].energy;
+            }
+            ii -= 2;
+            if(accEnergy[ii].energy < e) {
+                idx = ii;
+                e = accEnergy[idx].energy;
+            }
+        }
+        accEnergy[i].energy += e;
+        accEnergy[i].edgeTo = idx;
+    }
+
+    // Obtém o menor valor acumulado
+    int index = img.width*(img.height-1);
+    long sum = accEnergy[index].energy;
+    for(int i = index; i < img.width*img.height; i++) {
+        if(sum > accEnergy[i].energy) {
+            sum = accEnergy[i].energy;
+            index = i;
+        }
+        //printf("Energy: [%d to %d] = %d\n", i, accEnergy[i].edgeTo, accEnergy[i].energy);
+    }
+
+    seam[0] = index;
+    int previousIndex = accEnergy[index].edgeTo;
+    int i = 1;
+    while(previousIndex != -1) {
+        seam[i] = previousIndex;
+        previousIndex = accEnergy[previousIndex].edgeTo;
+        i++;
+    }
+}
+
+void removeSeam(Img *img, int* seam)
+{
+    /*
+    for(int i = 0; i < img->height; i++) {
+        int lineLimit = seam[i] / img->width;
+        if(seam[i] % img->width > 0)
+            lineLimit++;
+        lineLimit = lineLimit * img->width;
+
+        for(int j = seam[i]; j < lineLimit-1; j++) {
+            img->img[j].r = img->img[j+1].r;
+            img->img[j].g = img->img[j+1].g;
+            img->img[j].b = img->img[j+1].b;
+        }
+
+        img->img[lineLimit-1].r = 0;
+        img->img[lineLimit-1].g = 0;
+        img->img[lineLimit-1].b = 0;
+
+        //img->img[seam[i]].r = 255;
+        //img->img[seam[i]].g = 0;
+        //img->img[seam[i]].b = 0;
+    }
+    //img->width--;
+    */
+
+    for(int i = 0; i < img->height; i++) {
+        img->img[seam[i]].r = 255;
+        img->img[seam[i]].g = 0;
+        img->img[seam[i]].b = 0;
+    }
+}
+
+void crop(Img *img, Img mask, int pixels)
+{
+    for(int k = 0; k < pixels; k++) {
+        long energy[img->height * img->width];
+        int seam[img->height];
+        computeEnergy(*img, mask, energy);
+        computeSeam(*img, energy, seam);
+        removeSeam(img, seam);
+    }
+}
+
+void imageCopy(Img in, Img *out)
+{
+    out->height = in.height;
+    out->width = in.width;
+    for(int i = 0; i < in.height * in.width; i++) {
+        out->img[i].r = in.img[i].r;
+        out->img[i].g = in.img[i].g;
+        out->img[i].b = in.img[i].b;
+    }
 }
