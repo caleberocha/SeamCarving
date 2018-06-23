@@ -20,6 +20,8 @@
 // SOIL é a biblioteca para leitura das imagens
 #include "SOIL.h"
 
+#define CROPPED_PIXEL -888888
+
 // Um pixel RGB (24 bits)
 typedef struct {
     unsigned char r, g, b;
@@ -27,7 +29,7 @@ typedef struct {
 
 // Uma imagem RGB
 typedef struct {
-    int width, height;
+    int width, height, width_cropped;
     RGB* img;
 } Img;
 
@@ -149,6 +151,7 @@ int main(int argc, char** argv)
 
 	// Entra no loop de eventos, não retorna
 	imageCopy(pic[0], &pic[2]);
+	pic[2].width_cropped = pic[2].width;
     glutMainLoop();
 }
 
@@ -227,23 +230,22 @@ void draw()
 
 void computeEnergy(Img img, Img mask, long* e)
 {
-    FILE *f = fopen("energy.csv", "w");
+    //FILE *f = fopen("energy.csv", "w");
     int x, y, xr, xg, xb, yr, yg, yb;
 
-    for(int i = 0; i < img.height * img.width; i++) {
-        if(img.img[i].r < 0) {
-            e[i] = -999999999;
+    for(int i = 0; i < img.height*img.width; i++) {
+        x = i % img.width;
+        y = i / img.width;
+        if(x >= img.width_cropped) {
+            e[i] = CROPPED_PIXEL;
         } else {
             int m = mask.img[i].r - mask.img[i].g;
             if(m > 200) {
-                e[i] = -999999;
+                e[i] = -1000000;
                 //printf("%d (%d x %d): %d %d %d\n", i, i % img.width, i / img.width, mask.img[i].r, mask.img[i].g, mask.img[i].b);
             } else if(m < -200) {
-                e[i] = 999999;
+                e[i] = 1000000;
             } else {
-                x = i % img.width;
-                y = i / img.width;
-
                 if(x == 0) {
                     int idx_otherside = y * img.width - 1;
                     while(img.img[idx_otherside].r < 0)
@@ -277,66 +279,70 @@ void computeEnergy(Img img, Img mask, long* e)
                 e[i] = xr*xr + xg*xg + xb*xb + yr*yr + yg*yg + yb*yb;
             }
         }
-        fprintf(f, "%09ld,", e[i]);
-        if(i % img.width == img.width-1)
-            fprintf(f, "\n");
+        //fprintf(f, "%ld,", e[i]);
+        //if(i % img.width == img.width-1)
+        //    fprintf(f, "\n");
     }
-    fclose(f);
+    //fclose(f);
 }
 
 void computeSeam(Img img, long* energy, int* seam)
 {
-    FILE *f = fopen("accumulated.csv", "w");
+    //FILE *f = fopen("accumulated.csv", "w");
     // Acumulação de energias
     AccEnergyPixel accEnergy[img.width * img.height];
 
     for(int i = 0; i < img.width; i++) {
         accEnergy[i].energy = energy[i];
         accEnergy[i].edgeTo = -1;
-        fprintf(f, "%020ld,", accEnergy[i].energy);
+        //fprintf(f, "%ld,", accEnergy[i].energy);
     }
-    fprintf(f, "\n");
+    //fprintf(f, "\n");
     for(int i = img.width; i < img.height*img.width; i++) {
         int x = i % img.width;
-
-        int idx = i-img.width;
-        long e = accEnergy[idx].energy;
-        if(x == 0) {
-            if(accEnergy[idx+1].energy < e) {
-                e = accEnergy[idx+1].energy;
-                idx++;
-            }
-        } else if(x == img.width-1) {
-            if(accEnergy[idx-1].energy < e) {
-                e = accEnergy[idx-1].energy;
-                idx--;
-            }
+        if(x >= img.width_cropped) {
+            accEnergy[i].energy = CROPPED_PIXEL;
+            accEnergy[i].edgeTo = -2;
         } else {
-            if(accEnergy[idx+1].energy < e) {
-                e = accEnergy[idx+1].energy;
-                idx++;
-                if(accEnergy[idx-2].energy < e) {
-                    e = accEnergy[idx-2].energy;
-                    idx-=2;
+            int idx = i - img.width;
+            long e = accEnergy[idx].energy;
+            if(x == 0) {
+                if(accEnergy[idx+1].energy < e) {
+                    e = accEnergy[idx+1].energy;
+                    idx++;
                 }
-            } else if(accEnergy[idx-1].energy < e) {
-                e = accEnergy[idx-1].energy;
-                idx--;
+            } else if(x >= img.width_cropped-1) {
+                if(accEnergy[idx-1].energy < e) {
+                    e = accEnergy[idx-1].energy;
+                    idx--;
+                }
+            } else {
+                if(accEnergy[idx+1].energy < e) {
+                    e = accEnergy[idx+1].energy;
+                    idx++;
+                    if(accEnergy[idx-2].energy < e) {
+                        e = accEnergy[idx-2].energy;
+                        idx-=2;
+                    }
+                } else if(accEnergy[idx-1].energy < e) {
+                    e = accEnergy[idx-1].energy;
+                    idx--;
+                }
             }
+            accEnergy[i].energy = energy[i] + e;
+            accEnergy[i].edgeTo = idx;
         }
-        accEnergy[i].energy = energy[i] + e;
-        accEnergy[i].edgeTo = idx;
-        fprintf(f, "%020ld,", accEnergy[i].energy);
-        if(x == img.width-1)
-            fprintf(f, "\n");
+        //fprintf(f, "%ld,", accEnergy[i].energy);
+        //if(x == img.width-1)
+        //    fprintf(f, "\n");
     }
-    fclose(f);
+    //fclose(f);
 
     // Obtém o menor valor acumulado
     int index = img.width * (img.height-1);
     long sum = accEnergy[index].energy;
     for(int i = index; i < img.width*img.height; i++) {
-        if(energy[i] != -999999999 && sum > accEnergy[i].energy) {
+        if(i % img.width < img.width_cropped && sum > accEnergy[i].energy) {
             sum = accEnergy[i].energy;
             index = i;
         }
@@ -379,8 +385,9 @@ void removeSeam(Img *img, int* seam)
         img->img[lineEnd].r = -1;
         img->img[lineEnd].g = -1;
         img->img[lineEnd].b = -1;
-        printf("Pixel removido: %d x %d\n", seam[i] % img->width, seam[i] / img->width);
+        //printf("Pixel removido: %d x %d\n", seam[i] % img->width, seam[i] / img->width);
     }
+    img->width_cropped--;
 
     // Reorganiza os pixels para o novo tamanho
 //    for(int i = 0; i < img->width*img->height; i++) {
@@ -399,7 +406,7 @@ void removeSeam(Img *img, int* seam)
 void crop(Img *img, Img mask, int pixels)
 {
     for(int k = 0; k < pixels; k++) {
-        long energy[img->height * img->width];
+        long energy[img->height*img->width];
         int seam[img->height];
         computeEnergy(*img, mask, energy);
         computeSeam(*img, energy, seam);
