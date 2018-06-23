@@ -49,6 +49,7 @@ void keyboard(unsigned char key, int x, int y);
 // Energy
 void computeEnergy(Img img, Img mask, long* e);
 void computeSeam(Img img, long* energy, int* seam);
+void showSeam(Img* img, int* seam);
 void removeSeam(Img* img, int* seam);
 void imageCopy(Img in, Img *out);
 void crop(Img* img, Img mask, int pixels);
@@ -167,8 +168,8 @@ void keyboard(unsigned char key, int x, int y)
         sel = key - '1';
     if(key == 's') {
         //imageCopy(pic[0], &pic[2]);
-        crop(&pic[2], pic[1], 4);
-        printf("Dimensões: %d x %d\n", pic[2].width, pic[2].height);
+        crop(&pic[2], pic[1], 1);
+        //printf("Dimensões: %d x %d\n", pic[2].width, pic[2].height);
         sel = 2;
 
         uploadTexture();
@@ -226,59 +227,75 @@ void draw()
 
 void computeEnergy(Img img, Img mask, long* e)
 {
+    FILE *f = fopen("energy.csv", "w");
     int x, y, xr, xg, xb, yr, yg, yb;
 
     for(int i = 0; i < img.height * img.width; i++) {
-        int m = mask.img[i].r - mask.img[i].g;
-        if(m > 200) {
+        if(img.img[i].r < 0) {
             e[i] = -999999999;
-        } else if(m < -200) {
-            e[i] = 999999999;
         } else {
-            x = i % img.width;
-            y = i / img.width;
-
-            if(x == 0) {
-                xr = img.img[i+1].r - img.img[y*(img.width-1)].r;
-                xg = img.img[i+1].g - img.img[y*(img.width-1)].g;
-                xb = img.img[i+1].b - img.img[y*(img.width-1)].b;
-            } else if(x == img.width-1 || img.img[i+1].r < 0) {
-                xr = img.img[y*img.width].r - img.img[i-1].r;
-                xg = img.img[y*img.width].g - img.img[i-1].g;
-                xb = img.img[y*img.width].b - img.img[i-1].b;
+            int m = mask.img[i].r - mask.img[i].g;
+            if(m > 200) {
+                e[i] = -999999;
+                //printf("%d (%d x %d): %d %d %d\n", i, i % img.width, i / img.width, mask.img[i].r, mask.img[i].g, mask.img[i].b);
+            } else if(m < -200) {
+                e[i] = 999999;
             } else {
-                xr = img.img[i+1].r - img.img[i-1].r;
-                xg = img.img[i+1].g - img.img[i-1].g;
-                xb = img.img[i+1].b - img.img[i-1].b;
-            }
+                x = i % img.width;
+                y = i / img.width;
 
-            if(y == 0) {
-                yr = img.img[i+img.width].r - img.img[x+img.width*(img.height-1)].r;
-                yg = img.img[i+img.width].g - img.img[x+img.width*(img.height-1)].g;
-                yb = img.img[i+img.width].b - img.img[x+img.width*(img.height-1)].b;
-            } else if(y == img.height-1) {
-                yr = img.img[x].r - img.img[i-img.width].r;
-                yg = img.img[x].g - img.img[i-img.width].g;
-                yb = img.img[x].b - img.img[i-img.width].b;
-            } else {
-                yr = img.img[i+img.width].r - img.img[i-img.width].r;
-                yg = img.img[i+img.width].g - img.img[i-img.width].g;
-                yb = img.img[i+img.width].b - img.img[i-img.width].b;
+                if(x == 0) {
+                    int idx_otherside = y * img.width - 1;
+                    while(img.img[idx_otherside].r < 0)
+                        idx_otherside--;
+                    xr = img.img[i+1].r - img.img[idx_otherside].r;
+                    xg = img.img[i+1].g - img.img[idx_otherside].g;
+                    xb = img.img[i+1].b - img.img[idx_otherside].b;
+                } else if(x == img.width-1 || img.img[i+1].r < 0) {
+                    xr = img.img[y*img.width].r - img.img[i-1].r;
+                    xg = img.img[y*img.width].g - img.img[i-1].g;
+                    xb = img.img[y*img.width].b - img.img[i-1].b;
+                } else {
+                    xr = img.img[i+1].r - img.img[i-1].r;
+                    xg = img.img[i+1].g - img.img[i-1].g;
+                    xb = img.img[i+1].b - img.img[i-1].b;
+                }
+
+                if(y == 0) {
+                    yr = img.img[i+img.width].r - img.img[x+img.width*(img.height-1)].r;
+                    yg = img.img[i+img.width].g - img.img[x+img.width*(img.height-1)].g;
+                    yb = img.img[i+img.width].b - img.img[x+img.width*(img.height-1)].b;
+                } else if(y == img.height-1) {
+                    yr = img.img[x].r - img.img[i-img.width].r;
+                    yg = img.img[x].g - img.img[i-img.width].g;
+                    yb = img.img[x].b - img.img[i-img.width].b;
+                } else {
+                    yr = img.img[i+img.width].r - img.img[i-img.width].r;
+                    yg = img.img[i+img.width].g - img.img[i-img.width].g;
+                    yb = img.img[i+img.width].b - img.img[i-img.width].b;
+                }
+                e[i] = xr*xr + xg*xg + xb*xb + yr*yr + yg*yg + yb*yb;
             }
-            e[i] = xr*xr + xg*xg + xb*xb + yr*yr + yg*yg + yb*yb;
         }
+        fprintf(f, "%09ld,", e[i]);
+        if(i % img.width == img.width-1)
+            fprintf(f, "\n");
     }
+    fclose(f);
 }
 
 void computeSeam(Img img, long* energy, int* seam)
 {
+    FILE *f = fopen("accumulated.csv", "w");
     // Acumulação de energias
     AccEnergyPixel accEnergy[img.width * img.height];
 
     for(int i = 0; i < img.width; i++) {
         accEnergy[i].energy = energy[i];
         accEnergy[i].edgeTo = -1;
+        fprintf(f, "%020ld,", accEnergy[i].energy);
     }
+    fprintf(f, "\n");
     for(int i = img.width; i < img.height*img.width; i++) {
         int x = i % img.width;
 
@@ -298,26 +315,33 @@ void computeSeam(Img img, long* energy, int* seam)
             if(accEnergy[idx+1].energy < e) {
                 e = accEnergy[idx+1].energy;
                 idx++;
-            }
-            if(accEnergy[idx-2].energy < e) {
-                e = accEnergy[idx-2].energy;
-                idx -= 2;
+                if(accEnergy[idx-2].energy < e) {
+                    e = accEnergy[idx-2].energy;
+                    idx-=2;
+                }
+            } else if(accEnergy[idx-1].energy < e) {
+                e = accEnergy[idx-1].energy;
+                idx--;
             }
         }
-        accEnergy[i].energy += e;
+        accEnergy[i].energy = energy[i] + e;
         accEnergy[i].edgeTo = idx;
+        fprintf(f, "%020ld,", accEnergy[i].energy);
+        if(x == img.width-1)
+            fprintf(f, "\n");
     }
+    fclose(f);
 
     // Obtém o menor valor acumulado
     int index = img.width * (img.height-1);
     long sum = accEnergy[index].energy;
     for(int i = index; i < img.width*img.height; i++) {
-        if(sum > accEnergy[i].energy) {
+        if(energy[i] != -999999999 && sum > accEnergy[i].energy) {
             sum = accEnergy[i].energy;
             index = i;
         }
     }
-    //printf("Menor: %d (%d), %lu\n", index, index % img.width, accEnergy[index].energy);
+    printf("Menor: %d (%d), %ld\n", index, index % img.width, accEnergy[index].energy);
 
     seam[0] = index;
     int previousIndex = accEnergy[index].edgeTo;
@@ -329,43 +353,46 @@ void computeSeam(Img img, long* energy, int* seam)
     }
 }
 
+void showSeam(Img *img, int* seam)
+{
+    for(int i = 0; i < img->height; i++) {
+        img->img[seam[i]].r = 255;
+        img->img[seam[i]].g = 0;
+        img->img[seam[i]].b = 0;
+    }
+}
+
 void removeSeam(Img *img, int* seam)
 {
     for(int i = 0; i < img->height; i++) {
         int lineEnd = seam[i] / img->width;
         if(seam[i] % img->width > 0)
             lineEnd++;
-        lineEnd = lineEnd * img->width;
+        lineEnd = lineEnd * img->width - 1;
 
-        for(int j = seam[i]; j < lineEnd-1; j++) {
+        for(int j = seam[i]; j < lineEnd; j++) {
             img->img[j].r = img->img[j+1].r;
             img->img[j].g = img->img[j+1].g;
             img->img[j].b = img->img[j+1].b;
         }
 
-        img->img[lineEnd-1].r = -1;
-        img->img[lineEnd-1].g = -1;
-        img->img[lineEnd-1].b = -1;
+        img->img[lineEnd].r = -1;
+        img->img[lineEnd].g = -1;
+        img->img[lineEnd].b = -1;
+        printf("Pixel removido: %d x %d\n", seam[i] % img->width, seam[i] / img->width);
     }
 
     // Reorganiza os pixels para o novo tamanho
-    for(int i = 0; i < img->width*img->height; i++) {
-        if(i % img->width < img->width-1) {
-            int line = i / img->width;
-            img->img[i-line].r = img->img[i].r;
-            img->img[i-line].g = img->img[i].g;
-            img->img[i-line].b = img->img[i].b;
-        }
-    }
-
-    img->width--;
-
-
-//    for(int i = 0; i < img->height; i++) {
-//        img->img[seam[i]].r = 255;
-//        img->img[seam[i]].g = 0;
-//        img->img[seam[i]].b = 0;
+//    for(int i = 0; i < img->width*img->height; i++) {
+//        if(i % img->width < img->width-1) {
+//            int line = i / img->width;
+//            img->img[i-line].r = img->img[i].r;
+//            img->img[i-line].g = img->img[i].g;
+//            img->img[i-line].b = img->img[i].b;
+//        }
 //    }
+//
+//    img->width--;
 
 }
 
@@ -376,6 +403,7 @@ void crop(Img *img, Img mask, int pixels)
         int seam[img->height];
         computeEnergy(*img, mask, energy);
         computeSeam(*img, energy, seam);
+        //showSeam(img, seam);
         removeSeam(img, seam);
     }
 }
